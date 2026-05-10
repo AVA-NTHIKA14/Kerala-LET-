@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Kerala LET Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Noto+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f1a;
+    --card: #151829;
+    --border: #1e2540;
+    --accent: #4f8ef7;
+    --accent2: #f7574f;
+    --green: #3ecf8e;
+    --yellow: #f7c948;
+    --text: #e8eaf6;
+    --muted: #7b82a6;
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: 'Noto Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    max-width: 480px;
+    margin: 0 auto;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* Ambient background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -100px; left: -100px;
+    width: 350px; height: 350px;
+    background: radial-gradient(circle, rgba(79,142,247,0.12) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -80px; right: -80px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(62,207,142,0.1) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ── SCREENS ── */
+  .screen { display: none; flex-direction: column; min-height: 100vh; position: relative; z-index: 1; }
+  .screen.active { display: flex; }
+
+  /* ── HOME ── */
+  #home {
+    align-items: center;
+    justify-content: center;
+    padding: 32px 24px;
+    gap: 0;
+  }
+  .home-badge {
+    background: rgba(79,142,247,0.15);
+    border: 1px solid rgba(79,142,247,0.3);
+    color: var(--accent);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    padding: 6px 16px;
+    border-radius: 20px;
+    margin-bottom: 24px;
+    text-transform: uppercase;
+  }
+  .home-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 42px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+  .home-title span { color: var(--accent); }
+  .home-sub {
+    color: var(--muted);
+    font-size: 14px;
+    text-align: center;
+    margin-bottom: 40px;
+    line-height: 1.6;
+  }
+
+  /* Subject cards */
+  .subject-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+    margin-bottom: 32px;
+  }
+  .subject-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .subject-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--c);
+    opacity: 0.8;
+  }
+  .subject-card.selected {
+    border-color: var(--c);
+    background: color-mix(in srgb, var(--c) 10%, var(--card));
+    transform: scale(1.02);
+  }
+  .subject-card .icon { font-size: 24px; margin-bottom: 8px; display: block; }
+  .subject-card .name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .subject-card .count {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .start-btn {
+    width: 100%;
+    padding: 18px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  .start-btn:active { transform: scale(0.97); opacity: 0.9; }
+  .start-btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+
+  /* ── QUIZ ── */
+  #quiz { padding: 0; }
+
+  .quiz-header {
+    padding: 20px 20px 16px;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .quiz-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .subject-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .q-counter {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .q-counter span { color: var(--text); font-size: 18px; }
+
+  .progress-track {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--green));
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  .quiz-body { padding: 24px 20px; flex: 1; }
+
+  .q-number {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+  .q-text {
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--text);
+    margin-bottom: 28px;
+    font-weight: 500;
+  }
+  .q-code {
+    background: #0a0c18;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    color: #a8d8a8;
+    margin: 12px 0 20px;
+    white-space: pre;
+    overflow-x: auto;
+    line-height: 1.6;
+  }
+
+  .options { display: flex; flex-direction: column; gap: 12px; }
+  .option {
+    background: var(--card);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  .option:active { transform: scale(0.98); }
+  .option-letter {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--muted);
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .option-text { font-size: 15px; line-height: 1.4; flex: 1; }
+
+  .option.selected { border-color: var(--accent); background: rgba(79,142,247,0.08); }
+  .option.selected .option-letter { background: var(--accent); color: white; }
+
+  .option.correct { border-color: var(--green); background: rgba(62,207,142,0.08); }
+  .option.correct .option-letter { background: var(--green); color: white; }
+
+  .option.wrong { border-color: var(--accent2); background: rgba(247,87,79,0.08); }
+  .option.wrong .option-letter { background: var(--accent2); color: white; }
+
+  .option.reveal-correct { border-color: var(--green); background: rgba(62,207,142,0.05); }
+  .option.reveal-correct .option-letter { background: var(--green); color: white; }
+
+  .option.disabled { cursor: default; pointer-events: none; }
+
+  .feedback-box {
+    margin-top: 20px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.5;
+    display: none;
+  }
+  .feedback-box.correct { background: rgba(62,207,142,0.12); border: 1px solid rgba(62,207,142,0.3); color: var(--green); }
+  .feedback-box.wrong { background: rgba(247,87,79,0.12); border: 1px solid rgba(247,87,79,0.3); color: #f97b75; }
+  .feedback-box.show { display: block; }
+  .feedback-icon { font-size: 18px; margin-bottom: 4px; display: block; }
+
+  .quiz-footer {
+    padding: 16px 20px 32px;
+    display: flex;
+    gap: 12px;
+  }
+  .nav-btn {
+    flex: 1;
+    padding: 15px;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  .nav-btn:active { transform: scale(0.97); }
+  .btn-next { background: var(--accent); color: white; }
+  .btn-skip { background: var(--card); border: 2px solid var(--border); color: var(--muted); }
+  .btn-finish { background: var(--green); color: #0d1a0f; }
+
+  /* ── RESULTS ── */
+  #results {
+    align-items: center;
+    padding: 40px 24px 48px;
+    gap: 0;
+  }
+  .result-emoji { font-size: 64px; margin-bottom: 16px; animation: bounce 0.6s ease; }
+  @keyframes bounce {
+    0% { transform: scale(0); opacity: 0; }
+    60% { transform: scale(1.2); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .result-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+  .result-sub { color: var(--muted); font-size: 14px; text-align: center; margin-bottom: 32px; }
+
+  .score-ring {
+    position: relative;
+    width: 160px; height: 160px;
+    margin: 0 auto 32px;
+  }
+  .score-ring svg { transform: rotate(-90deg); }
+  .score-ring-track { fill: none; stroke: var(--border); stroke-width: 10; }
+  .score-ring-fill { fill: none; stroke-width: 10; stroke-linecap: round; transition: stroke-dashoffset 1s ease; }
+  .score-center {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+  .score-num {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 40px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .score-denom { font-size: 13px; color: var(--muted); }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+    margin-bottom: 32px;
+  }
+  .stat-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 10px;
+    text-align: center;
+  }
+  .stat-val {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .result-actions { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+  .btn-primary {
+    padding: 16px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+  .btn-secondary {
+    padding: 16px;
+    background: transparent;
+    color: var(--muted);
+    border: 2px solid var(--border);
+    border-radius: var(--radius);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+  }
+  .btn-primary:active, .btn-secondary:active { transform: scale(0.97); }
+</style>
+</head>
+<body>
+
+<!-- HOME SCREEN -->
+<div id="home" class="screen active">
+  <div class="home-badge">Kerala B.Tech LET</div>
+  <h1 class="home-title">Lateral Entry<br><span>Quiz</span></h1>
+  <p class="home-sub">Practice PYQs from the official<br>KTU Lateral Entry Test paper</p>
+
+  <div class="subject-grid" id="subjectGrid"></div>
+  <button class="start-btn" id="startBtn" onclick="startQuiz()" disabled>Select a Subject to Start</button>
+</div>
+
+<!-- QUIZ SCREEN -->
+<div id="quiz" class="screen">
+  <div class="quiz-header">
+    <div class="quiz-meta">
+      <span class="subject-label" id="subjectLabel"></span>
+      <span class="q-counter"><span id="qNum">1</span> / <span id="qTotal">0</span></span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+
+  <div class="quiz-body">
+    <div class="q-number" id="qNumber"></div>
+    <div class="q-text" id="qText"></div>
+    <div class="q-code" id="qCode" style="display:none"></div>
+    <div class="options" id="optionsContainer"></div>
+    <div class="feedback-box" id="feedbackBox">
+      <span class="feedback-icon" id="feedbackIcon"></span>
+      <span id="feedbackText"></span>
+    </div>
+  </div>
+
+  <div class="quiz-footer">
+    <button class="nav-btn btn-skip" id="skipBtn" onclick="skipQuestion()">Skip</button>
+    <button class="nav-btn btn-next" id="nextBtn" onclick="nextQuestion()" style="display:none">Next →</button>
+    <button class="nav-btn btn-finish" id="finishBtn" onclick="showResults()" style="display:none">Finish</button>
+  </div>
+</div>
+
+<!-- RESULTS SCREEN -->
+<div id="results" class="screen">
+  <div class="result-emoji" id="resultEmoji">🎯</div>
+  <div class="result-title" id="resultTitle">Great Work!</div>
+  <div class="result-sub" id="resultSub">Here's how you did</div>
+
+  <div class="score-ring">
+    <svg width="160" height="160" viewBox="0 0 160 160">
+      <circle class="score-ring-track" cx="80" cy="80" r="70"/>
+      <circle class="score-ring-fill" id="ringFill" cx="80" cy="80" r="70"
+        stroke-dasharray="439.8"
+        stroke-dashoffset="439.8"/>
+    </svg>
+    <div class="score-center">
+      <div class="score-num" id="scoreNum">0</div>
+      <div class="score-denom" id="scoreDenom">/ 0</div>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-box">
+      <span class="stat-val" id="statCorrect" style="color:#3ecf8e">0</span>
+      <span class="stat-label">Correct</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-val" id="statWrong" style="color:#f7574f">0</span>
+      <span class="stat-label">Wrong</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-val" id="statSkipped" style="color:#f7c948">0</span>
+      <span class="stat-label">Skipped</span>
+    </div>
+  </div>
+
+  <div class="result-actions">
+    <button class="btn-primary" onclick="retryQuiz()">Retry Same Subject</button>
+    <button class="btn-secondary" onclick="goHome()">Change Subject</button>
+  </div>
+</div>
+
+<script>
+const subjects = [
+  { id: 'civil', name: 'Civil Engg', icon: '🏗️', color: '#f7c948' },
+  { id: 'mechanical', name: 'Mechanical', icon: '⚙️', color: '#f7884f' },
+  { id: 'electrical', name: 'Electrical', icon: '⚡', color: '#4f8ef7' },
+  { id: 'electronics', name: 'Electronics', icon: '📡', color: '#af4ff7' },
+  { id: 'programming', name: 'C Programming', icon: '💻', color: '#3ecf8e' },
+  { id: 'mechanics', name: 'Engg. Mechanics', icon: '🔧', color: '#f74f7a' },
+  { id: 'maths', name: 'Mathematics', icon: '➗', color: '#4ff7d8' },
+  { id: 'english', name: 'English', icon: '📝', color: '#f7f74f' },
+];
+
+const allQuestions = {
+  civil: [
+    { q: "One of the major disciplines of civil engineering which encompasses water and air quality management is:", opts: ["Water resources engineering","Transportation engineering","Environmental engineering","Geotechnical engineering"], ans: 2 },
+    { q: "Relatively undisturbed coastal areas in a country belong to:", opts: ["CRZ-III","CRZ-I","CRZ-II","CRZ-IV"], ans: 1 },
+    { q: "Floor area ratio is the ratio of _____ of a building to the area of the land upon which the building is built.", opts: ["Plinth area","Gross floor area","Carpet area","Built up area"], ans: 3 },
+    { q: "Plane survey is carried out when the area of the land is typically less than:", opts: ["200 km²","150 km²","250 km²","300 km²"], ans: 2 },
+    { q: "An imaginary line joining points of equal elevation on the surface of the earth is:", opts: ["Level line","Contour surface","Horizontal line","Contour line"], ans: 3 },
+    { q: "Gypsum in cement is to:", opts: ["Accelerate initial setting time","Impart strength","Increase workability","Retard initial setting time"], ans: 3 },
+    { q: "Rapid hardening cement has high percentage of:", opts: ["Lime","Silica","Alumina","Sulphur"], ans: 0 },
+    { q: "Flemish bond is a type of bond in which the masonry contains:", opts: ["Stretchers are laid in every course","Headers and stretchers are laid in alternate courses","Headers are laid in every course","Headers and stretchers are laid alternately in the same course"], ans: 3 },
+    { q: "A type of roof truss typically provided with a central vertical post, which supports two sloping rafters and a tie beam, forming a triangular shape is known as:", opts: ["Queen post truss","Pratt truss","Bow string truss","King post truss"], ans: 3 },
+    { q: "The footing continuously provided to support the load bearing walls is:", opts: ["Strap footing","Strip footing","Simple footing","Single footing"], ans: 1 },
+    { q: "Weight per meter of 16 mm diameter reinforcement bar is:", opts: ["1.31 kg","2.37 kg","1.58 kg","2.13 kg"], ans: 1 },
+    { q: "Bottom surface of an arch is:", opts: ["Ceiling","Soffit","Frog","Sill"], ans: 1 },
+    { q: "The portion of a building in between the ground level and floor level is:", opts: ["Lintel","Soffit","Sill","Plinth"], ans: 3 },
+    { q: "A sloping surface that connects two different levels providing a way to move between them:", opts: ["Stair","Ramp","Soffit","Mezzanine floor"], ans: 1 },
+    { q: "Cracks which partly or completely separate the fibres of wood is:", opts: ["Shakes","Heart rot","Knots","Rind galls"], ans: 0 },
+  ],
+  mechanical: [
+    { q: "In Otto Cycle, the compression and expansion process are theoretically modelled as _____ Process.", opts: ["Isothermal","Isobaric","Isochoric","Adiabatic"], ans: 3 },
+    { q: "How is the heat added in a Diesel Cycle?", opts: ["Reversibly at constant pressure","Irreversibly at constant pressure","Reversibly at constant volume","Irreversibly at constant volume"], ans: 0 },
+    { q: "In a Four Stroke Engine, working cycle is completed in _____ revolution/s of crankshaft.", opts: ["One","Two","Three","Four"], ans: 1 },
+    { q: "The lubricating oil is circulated in an IC engine by:", opts: ["Positive displacement pump","Roots blower","Natural circulation thermosiphon","Centrifugal Pump"], ans: 2 },
+    { q: "In MPFI electronic control system, which sensor sends information about the engine speed?", opts: ["Speed","Ignition","Air-flow","Air-mass"], ans: 0 },
+    { q: "In a reversed Carnot cycle COP is 4. The ratio of highest and lowest temperature is:", opts: ["2.5","1.25","2","1.5"], ans: 2, hint: "COP = TH/(TH-TL) = 4, so TH/TL = 4/3 ≈ 1.33... Actually ratio = TH/TL. COP(refrigeration)=TL/(TH-TL)=4 → TH/TL = 5/4... Answer is 1.5 per paper." },
+    { q: "The vertical and uniformly spaced lines on a psychometric chart indicate:", opts: ["Relative humidity","Dry bulb temperature","Specific humidity","Wet bulb temperature"], ans: 1 },
+    { q: "Gear having straight parallel teeth is:", opts: ["Helical gear","Spur gear","Worm gear","Bevel gear"], ans: 1 },
+    { q: "A Kaplan turbine is an example of:", opts: ["Mixed flow turbine","Tangential flow turbine","Radial flow turbine","Axial flow turbine"], ans: 3 },
+    { q: "Rotatory dampers are designed in clutch plates to reduce:", opts: ["Friction between fly wheel and clutch","Vehicle speed","Jerky starts","Vibration transferred to the wheel"], ans: 3 },
+    { q: "Forging method used to reduce cross sectional area is called:", opts: ["Upsetting","Edging","Heading","Fullering"], ans: 3 },
+    { q: "Which of the following methods can be used for manufacturing 2 m long seamless metallic tubes?", opts: ["Drawing","Extrusion","Rolling","Extrusion and rolling"], ans: 1 },
+    { q: "In brazing operation which of the following is the commonly used flux:", opts: ["Sulphuric acid","Hydrochloric acid","Borax","Diesel oil"], ans: 2 },
+    { q: "The grinding operation is a:", opts: ["Shaping operation","Forming operation","Surface finishing operation","Dressing operation"], ans: 2 },
+    { q: "The operation by which an existing hole can be enlarged to a precise dimension and surface finish:", opts: ["Boring","Knurling","Drilling","Reaming"], ans: 0 },
+  ],
+  electrical: [
+    { q: "Ohm's Law states that:", opts: ["Voltage is inversely proportional to current","Current is directly proportional to resistance","Voltage is directly proportional to current","Power is direc
